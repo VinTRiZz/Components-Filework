@@ -4,3 +4,6 @@
 [submodule "depends/Components-ExtraClasses"]
 	path = depends/Components-ExtraClasses
 	url = git@github.com:VinTRiZz/Components-ExtraClasses.git
+[submodule "depends/Components-Common"]
+	path = depends/Components-Common
+	url = git@github.com:VinTRiZz/Components-Common.git

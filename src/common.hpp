@@ -3,6 +3,11 @@
 #include <string>
 #include <vector>
 
+#ifdef QT_CORE_LIB
+#include <QString>
+#include <QFile>
+#endif // QT_CORE_LIB
+
 namespace Filework
 {
 
@@ -21,6 +26,7 @@ int16_t dirsCount(const std::string& dirPath);
 bool readFileData(const std::string& filePath, std::string& output);
 bool replaceFileData(const std::string& filePath, const std::string& dataString);
 bool appendFileData(const std::string& filePath, const std::string& dataString);
-};
+
+}
 
 }
