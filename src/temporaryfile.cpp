@@ -17,7 +17,7 @@ TemporaryFile::TemporaryFile(const std::string &targetFile) :
     const bool isCorrectFile = std::filesystem::exists(tgtFilePath.parent_path()) && std::filesystem::is_regular_file(targetFile);
 
     if (isNewFile ^ !isCorrectFile) {
-        throw std::invalid_argument("Temp file: target file invalid");
+        throw std::invalid_argument(std::string("Temp file: invalid target file: ") + targetFile);
     }
 
     m_filepath = Common::createRandomString(10);
@@ -42,6 +42,11 @@ TemporaryFile::~TemporaryFile() {
 
 void TemporaryFile::accept() {
     std::filesystem::copy_file(m_filepath, m_targetFilePath, std::filesystem::copy_options::overwrite_existing);
+}
+
+std::string TemporaryFile::path() const
+{
+    return m_filepath;
 }
 
 }

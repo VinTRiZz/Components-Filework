@@ -33,6 +33,7 @@ public:
     }
 
     void accept();
+    std::string path() const;
 
 private:
     std::string m_targetFilePath;
