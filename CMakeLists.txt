@@ -1,3 +1,5 @@
+COMPONENTS_REQUIRE_QT(5 Core)
+
 COMPONENTS_CONFIGURE_COMPONENT(Filework
     Qt5::Core
     stdc++fs
