@@ -1,9 +1,14 @@
-COMPONENTS_REQUIRE_QT(5 Core)
 
-COMPONENTS_CONFIGURE_COMPONENT(Filework
-    Qt5::Core
-    stdc++fs
-)
+if (${COMPONENTS_IS_ENABLED_QT})
+    COMPONENTS_CONFIGURE_COMPONENT(Filework
+        Qt5::Core
+        stdc++fs
+    )
+else()
+    COMPONENTS_CONFIGURE_COMPONENT(Filework
+        stdc++fs
+    )
+endif()
 
 COMPONENTS_LINK_COMPONENT(Filework Logger)
 COMPONENTS_LINK_COMPONENT(Filework Common)
