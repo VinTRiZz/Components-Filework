@@ -16,7 +16,7 @@ SettingsFileWorker::SettingsFileWorker()
 void SettingsFileWorker::setSetting(const std::string &fileName, int64_t value)
 {
     if (!Common::replaceFileData(m_settingFilesDir + "/" + fileName, std::to_string(value))) {
-        LOG_WARNING("Replace data failed for filename:", fileName);
+        COMPLOG_WARNING("Replace data failed for filename:", fileName);
     }
 }
 
@@ -24,7 +24,7 @@ void SettingsFileWorker::setSetting(const std::string &fileName, int64_t value)
 void SettingsFileWorker::setSetting(const std::string &fileName, const std::string &value)
 {
     if (!Common::replaceFileData(m_settingFilesDir + "/" + fileName, value)) {
-        LOG_WARNING("Replace data failed for filename:", fileName);
+        COMPLOG_WARNING("Replace data failed for filename:", fileName);
     }
 }
 
@@ -32,7 +32,7 @@ ExtraClasses::JOptional<std::string> SettingsFileWorker::getSetting(const std::s
 {
     std::string result;
     if (!Common::readFileData(m_settingFilesDir + "/" + fileName, result)) {
-        LOG_WARNING("Read data failed for filename:", fileName);
+        COMPLOG_WARNING("Read data failed for filename:", fileName);
         return {};
     }
     boost::algorithm::trim_left(result);

@@ -121,7 +121,7 @@ bool readFileData(const std::string &filePath, std::string &output)
     // Open the file in read mode
     file = fopen(filePath.c_str(), "rb");
     if (file == NULL) {
-        LOG_ERROR("Failed to open file:", filePath);
+        COMPLOG_ERROR("Failed to open file:", filePath);
         return false;
     }
 
@@ -144,7 +144,7 @@ bool replaceFileData(const std::string &filePath, const std::string &dataString)
 //    std::fstream cardFile(filePath, std::ios_base::trunc | std::ios_base::out);
 //    if (!cardFile.is_open())
 //    {
-//        LOG_WARNING("Error writing to file by path:", filePath.c_str(), strerror(errno));
+//        COMPLOG_WARNING("Error writing to file by path:", filePath.c_str(), strerror(errno));
 //        return false;
 //    }
 
@@ -161,7 +161,7 @@ bool replaceFileData(const std::string &filePath, const std::string &dataString)
 
     // Check if the file opened successfully
     if (fp == NULL) {
-        LOG_ERROR("Error opening file", filePath);
+        COMPLOG_ERROR("Error opening file", filePath);
         return false;
     }
 
@@ -170,7 +170,7 @@ bool replaceFileData(const std::string &filePath, const std::string &dataString)
 
     // Close the file
     if (fclose(fp) != 0) {
-        LOG_ERROR("Error closing file", filePath);
+        COMPLOG_ERROR("Error closing file", filePath);
         return false;
     }
     return true;
@@ -182,7 +182,7 @@ bool appendFileData(const std::string &filePath, const std::string &dataString)
 //    std::fstream cardFile(filePath, std::ios_base::app | std::ios_base::out);
 //    if (!cardFile.is_open())
 //    {
-//        LOG_WARNING("Error writing to file by path:", filePath.c_str(), strerror(errno));
+//        COMPLOG_WARNING("Error writing to file by path:", filePath.c_str(), strerror(errno));
 //        return false;
 //    }
 
@@ -199,7 +199,7 @@ bool appendFileData(const std::string &filePath, const std::string &dataString)
 
     // Check if the file opened successfully
     if (fp == NULL) {
-        LOG_ERROR("Error opening file", filePath);
+        COMPLOG_ERROR("Error opening file", filePath);
         return false;
     }
 
@@ -208,7 +208,7 @@ bool appendFileData(const std::string &filePath, const std::string &dataString)
 
     // Close the file
     if (fclose(fp) != 0) {
-        LOG_ERROR("Error closing file", filePath);
+        COMPLOG_ERROR("Error closing file", filePath);
         return false;
     }
     return true;
