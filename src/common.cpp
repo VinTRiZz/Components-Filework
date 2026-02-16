@@ -214,4 +214,13 @@ bool appendFileData(const std::string &filePath, const std::string &dataString)
     return true;
 }
 
+bool copyFile(const std::string &sourcePath, const std::string &targetPath, bool replaceExisting)
+{
+    try {
+        return stdfs::copy_file(sourcePath, targetPath, (replaceExisting ? stdfs::copy_options::overwrite_existing : stdfs::copy_options::skip_existing));
+    } catch (std::exception&) {
+        return false;
+    }
+}
+
 }

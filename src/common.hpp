@@ -27,6 +27,8 @@ bool readFileData(const std::string& filePath, std::string& output);
 bool replaceFileData(const std::string& filePath, const std::string& dataString);
 bool appendFileData(const std::string& filePath, const std::string& dataString);
 
+bool copyFile(const std::string& sourcePath, const std::string& targetPath, bool replaceExisting = true);
+
 }
 
 }
