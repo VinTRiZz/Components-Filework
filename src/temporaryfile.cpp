@@ -20,7 +20,7 @@ TemporaryFile::TemporaryFile(const std::string &targetFile) :
         throw std::invalid_argument(std::string("Temp file: invalid target file: ") + targetFile);
     }
 
-    m_filepath = Common::createRandomString(10);
+    m_filepath = ::Common::createRandomString(10);
     m_file.exceptions(std::ios::failbit);
 
     if (!isNewFile) {
