@@ -205,5 +205,5 @@ only_tabs =
 ; Файл может заканчиваться строкой без \n.
 last_key = last_value
 ; final comment without newline after it
-
+   
 )";

@@ -31,6 +31,7 @@ public:
      * @return              Section values (empty on error or if actually empty)
      */
     std::map<std::string, std::string> getSection(const std::string& sectionName = {}) const;
+    std::string getSettingComment(const std::string& setting, const std::string& section) const;
 
 private:
     struct Impl;
