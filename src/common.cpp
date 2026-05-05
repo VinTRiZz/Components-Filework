@@ -3,6 +3,7 @@
 #include <Components/Logger/Logger.h>
 
 #include <algorithm>
+#include <cstring>
 #include <regex>
 
 #if (__cplusplus >= 201701UL)
@@ -135,6 +136,18 @@ bool readFileData(const std::string &filePath, std::string &output)
 
     // Close the file
     fclose(file);
+    return true;
+}
+
+bool saveFileData(const std::string &filePath, const std::string &input)
+{
+    std::ofstream ofile(filePath);
+    if (!ofile.is_open()) {
+        COMPLOG_ERROR("Failed to open file for output:", std::strerror(errno));
+        return false;
+    }
+    ofile << input;
+    ofile.flush();
     return true;
 }
 

@@ -24,6 +24,7 @@ int16_t filesCount(const std::string& dirPath);
 int16_t dirsCount(const std::string& dirPath);
 
 bool readFileData(const std::string& filePath, std::string& output);
+bool saveFileData(const std::string& filePath, const std::string& input);
 bool replaceFileData(const std::string& filePath, const std::string& dataString);
 bool appendFileData(const std::string& filePath, const std::string& dataString);
 
