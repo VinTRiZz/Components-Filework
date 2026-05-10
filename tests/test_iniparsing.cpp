@@ -6,6 +6,8 @@
 
 #include "testini.cpp"
 
+#include <filesystem>
+
 using namespace Filework;
 
 void checkValues(const IniFileParser& parser) {
@@ -19,23 +21,25 @@ TEST(ConfigParsing, IniRead) {
     tmpFile.seekg(0);
 
     IniFileParser parser;
-    ASSERT_TRUE(parser.read(tmpFile.getFilename()));
+    ASSERT_TRUE(parser.read(tmpFile.getFilename(), true)) << parser.getLastErrorText();
     checkValues(parser);
 }
 
 TEST(ConfigParsing, IniWrite) {
     // Prepare
-    // TemporaryFile tmpFile("test.ini");
-    // tmpFile << TEST_INI_DATA;
-    // tmpFile.seekg(0);
+    TemporaryFile tmpFile("test.ini");
+    tmpFile << TEST_INI_DATA;
+    tmpFile.seekg(0);
 
-    // IniFileParser parser;
-    // ASSERT_TRUE(parser.read(tmpFile.getFilename(), true));
-    // checkValues(parser);
+    IniFileParser parser;
+    ASSERT_TRUE(parser.read(tmpFile.getFilename(), true)) << parser.getLastErrorText();
+    checkValues(parser);
 
-    // ASSERT_TRUE(parser.write(tmpFile.getFilename()));
+    tmpFile.clearFileData();
+    ASSERT_TRUE(parser.write("test_inifwrite.ini")) << parser.getLastErrorText();
 
-    // std::string tmpOutput;
-    // ASSERT_TRUE(Common::readFileData(tmpFile.getFilename().data(), tmpOutput));
-    // ASSERT_EQ(TEST_INI_DATA, tmpOutput);
+    std::string tmpOutput;
+    ASSERT_TRUE(Common::readFileData("test_inifwrite.ini", tmpOutput));
+    std::filesystem::remove("test_inifwrite.ini");
+    ASSERT_EQ(TEST_INI_EXPECTED_DATA, tmpOutput);
 }

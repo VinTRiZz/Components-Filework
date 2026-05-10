@@ -72,4 +72,14 @@ void TemporaryFile::accept() noexcept(false) {
     std::filesystem::copy_file(m_filepath, m_targetFilePath, std::filesystem::copy_options::overwrite_existing);
 }
 
+void TemporaryFile::clearFileData() noexcept(false)
+{
+    m_file.close();
+    try {
+        m_file.open(m_filepath, std::ios_base::trunc | std::ios_base::in | std::ios_base::out);
+    } catch (const std::ios_base::failure& e) {
+        throw std::runtime_error(std::string("Temporary file open error: ") + e.what());
+    }
+}
+
 }

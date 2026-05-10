@@ -8,14 +8,9 @@
 #include <ranges>
 #endif // C++20
 
+#include <Components/Logger/Logger.h>
 #include <Components/Filework/TemporaryFile.h>
 #include <Components/Filework/Common.h>
-
-
-
-#include <iostream>
-
-
 
 namespace Filework {
 
@@ -83,10 +78,6 @@ bool IniFileParser::read(const std::string_view &filePath, bool ignoreInvalidVal
 
     d->configData.clear();
 
-#if __cplusplus >= 202002l
-    auto lines = fileData
-                 | std::views::split('\n');
-#else
     std::list<std::string_view> lines;
     {
         std::size_t begPos {};
@@ -101,7 +92,6 @@ bool IniFileParser::read(const std::string_view &filePath, bool ignoreInvalidVal
             ++endPos;
         }
     }
-#endif // C++20
 
     // Parsing cases:
     // 1) '[abc]'   --> Section
@@ -167,9 +157,9 @@ bool IniFileParser::read(const std::string_view &filePath, bool ignoreInvalidVal
         }
 
         // Get and check name
-        auto settingName = trimView({l.data() + objectStartPos, equalSignPos - objectStartPos});
+        auto settingNameV = trimView({l.data() + objectStartPos, equalSignPos - objectStartPos});
         bool isNameValid {false};
-        for (auto& c : settingName) {
+        for (auto& c : settingNameV) {
             isNameValid = std::isalnum(c) | std::isalpha(c) | (c == '_') | (c == '-');
             if (!isNameValid) {
                 break;
@@ -184,14 +174,16 @@ bool IniFileParser::read(const std::string_view &filePath, bool ignoreInvalidVal
         }
 
         // Get value
-        auto settingValue = trimView({l.data() + equalSignPos + 1, commentStartPos - equalSignPos - 1});
-        d->configData[currentSection][settingName.data()] = settingValue.data();
+        auto settingValueV = trimView({l.data() + equalSignPos + 1, commentStartPos - equalSignPos});
+        const auto settingName  = std::string(settingNameV.data(), settingNameV.size());
+        const auto settingValue = std::string(settingValueV.data(), settingValueV.size());
+        d->configData[currentSection][settingName] = settingValue;
 
         // Add comment
         if (commentStartPos != l.size()) {
-            auto comment = trimView({l.data() + commentStartPos, l.size() - commentStartPos});
-            comment = trimView({comment.data() + 1, comment.size() - 1});
-            d->settingComments[currentSection + ":" + settingName.data()] = comment;
+            auto comment = trimView({l.data() + commentStartPos + 2, l.size() - commentStartPos - 2});
+            comment = trimView({comment.data(), comment.size()});
+            d->settingComments[currentSection + ":" + settingName] = std::string(comment.data(), comment.size());
         }
     }
 
@@ -202,13 +194,29 @@ bool IniFileParser::write(const std::string_view &filePath)
 {
     auto targetFile = std::filesystem::path(filePath);
     auto subdir = targetFile.parent_path();
+    if (subdir.empty()) {
+        subdir = ".";
+    }
     if (!std::filesystem::exists(subdir)) {
         d->lastError = "File directory not exist";
         return false;
     }
 
     TemporaryFile tmpf(filePath.data());
-
+    for (const auto& [sectionName, sectionValues] : d->configData) {
+        if (!sectionName.empty()) [[likely]] {
+            tmpf << "[" << sectionName << "]\n";
+        }
+        for (const auto& [name, value] : sectionValues) {
+            auto comment = getSettingComment(name, sectionName);
+            if (comment.empty()) [[likely]] {
+                tmpf << name << " = " << value << "\n";
+            } else {
+                tmpf << name << " = " << value << " ; " << comment << "\n";
+            }
+        }
+    }
+    tmpf.accept();
     return true;
 }
 
@@ -240,7 +248,7 @@ void IniFileParser::addSection(const std::string &sectionName, std::map<std::str
 std::map<std::string, std::string> IniFileParser::getSection(const std::string &sectionName) const
 {
     auto targetSection = d->configData.find(sectionName);
-    if (targetSection != d->configData.end()) {
+    if (targetSection == d->configData.end()) {
         return {};
     }
     return targetSection->second;
@@ -249,7 +257,7 @@ std::map<std::string, std::string> IniFileParser::getSection(const std::string &
 std::string IniFileParser::getSettingComment(const std::string &setting, const std::string &section) const
 {
     auto targetSection = d->settingComments.find(section + ":" + setting);
-    if (targetSection != d->settingComments.end()) {
+    if (targetSection == d->settingComments.end()) {
         return {};
     }
     return targetSection->second;

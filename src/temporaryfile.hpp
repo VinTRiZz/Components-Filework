@@ -70,6 +70,11 @@ public:
      */
     void accept() noexcept(false);
 
+    /**
+     * @brief clearFileData Wipes all data written to file (reopen it using TRUNCATE)
+     */
+    void clearFileData() noexcept(false);
+
 private:
     std::string m_targetFilePath;
     std::string m_filepath;
