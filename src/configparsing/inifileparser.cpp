@@ -241,6 +241,11 @@ std::vector<std::string> IniFileParser::getSections() const
     return res;
 }
 
+void IniFileParser::addSection(const std::string &sectionName)
+{
+    d->configData[sectionName] = {};
+}
+
 void IniFileParser::addSection(const std::string &sectionName, const std::map<std::string, std::string> &values)
 {
     d->configData[sectionName] = values;
@@ -249,6 +254,11 @@ void IniFileParser::addSection(const std::string &sectionName, const std::map<st
 void IniFileParser::addSection(const std::string &sectionName, std::map<std::string, std::string> &&values)
 {
     d->configData[sectionName] = std::move(values);
+}
+
+void IniFileParser::setSectionComment(const std::string &section, const std::string &setting, const std::string &comment)
+{
+    d->settingComments[getCommentId(section, setting)] = comment;
 }
 
 std::map<std::string, std::string> IniFileParser::getSection(const std::string &sectionName) const
@@ -262,11 +272,16 @@ std::map<std::string, std::string> IniFileParser::getSection(const std::string &
 
 std::string IniFileParser::getSettingComment(const std::string &setting, const std::string &section) const
 {
-    auto targetSection = d->settingComments.find(section + ":" + setting);
+    auto targetSection = d->settingComments.find(getCommentId(section, setting));
     if (targetSection == d->settingComments.end()) {
         return {};
     }
     return targetSection->second;
+}
+
+std::string IniFileParser::getCommentId(const std::string &section, const std::string &setting) const
+{
+    return section + ":" + setting;
 }
 
 } // namespace Filework

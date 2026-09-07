@@ -24,8 +24,13 @@ public:
 
     std::vector<std::string> getSections() const;
 
+    void addSection(const std::string& sectionName);
     void addSection(const std::string& sectionName, const std::map<std::string, std::string>& values);
     void addSection(const std::string& sectionName, std::map<std::string, std::string>&& values);
+
+    void setSectionComment(const std::string& section,
+                           const std::string& setting,
+                           const std::string& comment);
 
     /**
      * @brief getSection    Get values of section in KEY - VALUE format
@@ -38,6 +43,9 @@ public:
 private:
     struct Impl;
     std::shared_ptr<Impl> d;
+
+    std::string getCommentId(const std::string& section,
+                             const std::string& setting) const;
 };
 
 } // namespace Filework
