@@ -16,6 +16,8 @@ public:
     IniFileParser();
     ~IniFileParser();
 
+    void reset();
+
     bool read(const std::string_view &filePath, bool ignoreInvalidValues = false);
     bool write(const std::string_view &filePath);
     std::string getLastErrorText() const;

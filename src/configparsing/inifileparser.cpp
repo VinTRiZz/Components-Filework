@@ -63,6 +63,12 @@ IniFileParser::~IniFileParser()
 
 }
 
+void IniFileParser::reset()
+{
+    d->configData.clear();
+    d->settingComments.clear();
+}
+
 bool IniFileParser::read(const std::string_view &filePath, bool ignoreInvalidValues)
 {
     if (!std::filesystem::exists(filePath)) {
