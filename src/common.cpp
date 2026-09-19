@@ -131,9 +131,6 @@ bool readFileData(const std::string &filePath, std::string &output)
         std::copy_n(buffer, bytesRead, std::back_inserter(output));
     }
 
-    if (!output.size())
-        return false;
-
     // Close the file
     fclose(file);
     return true;
