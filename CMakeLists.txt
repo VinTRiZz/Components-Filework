@@ -1,17 +1,14 @@
-
-if (${COMPONENTS_IS_ENABLED_QT})
-    COMPONENTS_CONFIGURE_COMPONENT(Filework "1.0.0"
-        Qt5::Core
-        Qt5::Widgets
-        stdc++fs
-    )
-else()
-    COMPONENTS_CONFIGURE_COMPONENT(Filework "1.0.0"
-        stdc++fs
-    )
+COMPONENTS_CONFIGURE_COMPONENT(Filework "1.0.0"
+    stdc++fs
+)
+COMPONENTS_CCR_CONAN_IS_CONFIGURED(COMPONENTS_CONAN_CONFIGURED)
+if (COMPONENTS_CONAN_CONFIGURED)
+    COMPONENTS_CCR_CONAN_REQUIRE(C++FS)
 endif()
-
-COMPONENTS_LINK_COMPONENT(Components-Filework Logger)
+COMPONENTS_LINK_COMPONENT(Components-Filework Core)
 COMPONENTS_LINK_COMPONENT(Components-Filework ExtraClasses)
-
+COMPONENTS_LINK_COMPONENT(Components-Filework Logger)
+if (COMPONENTS_IS_ENABLED_QT)
+    target_link_libraries(Components-Filework PRIVATE Qt5::Core Qt5::Widgets)
+endif()
 COMPONENTS_ADD_COMPONENT_TEST(Filework)
