@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include <functional>
 #include <fstream>
 
 namespace Filework
@@ -18,14 +20,25 @@ class TemporaryFile
 
 public:
 
-    /**
-     * @brief TemporaryFile
-     * @param targetFile    Path to a file for writing or overwriting
-     * @throws  std::invalid_argument   - if targetFile is invalid path;
-     *          std::runtime_error      - if failed to open tmp file
-     */
+    // Constructor-set of a target has no warranty,
+    // that file will be set
     TemporaryFile(const std::string& targetFile) noexcept(false);
+
+    TemporaryFile() noexcept(false);
     ~TemporaryFile();
+
+    /**
+     * @brief setTargetFile Set file to save data into on accept()
+     * @param targetFile    Target file path
+     * @return              true if target exist and writable or creatable
+     */
+    bool setTargetFile(const std::string& targetFile);
+
+    /**
+     * @brief accept Write changes into a target file
+     * @throws Same errors as std::filesystem::copy()
+     */
+    void accept() noexcept(false);
 
     /**
      * @brief getFilename   Get path to a temporary file
@@ -42,8 +55,10 @@ public:
     /**
      * @brief seekg Set current position of a cursor in file
      * @param pos
+     * @param moveDir   Same logic as in std::fstream
+     * @return          true if temporary file is correctly inited
      */
-    void seekg(std::size_t pos);
+    bool seekg(std::size_t pos, const std::ios_base::seekdir &moveDir = std::ios_base::cur);
 
     /**
      * @brief tellg Get current position of a cursor in a file
@@ -51,6 +66,23 @@ public:
      */
     std::size_t tellg();
 
+    /**
+     * @brief empty Return true if file size is 0
+     * @return
+     */
+    bool empty() const;
+
+    /**
+     * @brief size Return size of file
+     * @return
+     */
+    std::size_t size() const;
+
+    /**
+     * @brief operator << Same as std::fstream operator
+     * @param val
+     * @return
+     */
     template <typename InputT>
     TemporaryFile& operator <<(InputT&& val) {
         m_file << val;
@@ -58,17 +90,17 @@ public:
         return *this;
     }
 
+    /**
+     * @brief operator >> Same as std::fstream operator
+     * @param val
+     * @return
+     */
     template <typename OutputT>
-    void operator >>(OutputT& val) {
+    TemporaryFile& operator >>(OutputT& val) {
         m_file >> val;
         m_file.flush();
+        return *this;
     }
-
-    /**
-     * @brief accept Write changes into a target file
-     * @throws Same errors as std::filesystem::copy()
-     */
-    void accept() noexcept(false);
 
     /**
      * @brief clearFileData Wipes all data written to file (reopen it using TRUNCATE)
@@ -79,6 +111,9 @@ private:
     std::string m_targetFilePath;
     std::string m_filepath;
     std::fstream m_file;
+    std::unique_ptr<bool, std::function<void(bool*)> > m_fileDeleter; // Deletes file
+
+    void init() noexcept(false);
 };
 
 }

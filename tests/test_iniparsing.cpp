@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 
 #include <Components/Filework/ConfigParsing/IniParser.h>
-#include <Components/Filework/TemporaryFile.h>
 #include <Components/Filework/Common.h>
 
 #include "testini.cpp"
 
 #include <filesystem>
+#include <fstream>
 
 using namespace Filework;
 
@@ -14,28 +14,53 @@ void checkValues(const IniFileParser& parser) {
     // TODO: Check values
 }
 
-TEST(ConfigParsing, IniRead) {
-    // Prepare
-    TemporaryFile tmpFile("test.ini");
-    tmpFile << TEST_INI_DATA;
-    tmpFile.seekg(0);
+TEST(Components_Filework, IniRead) {
+    const std::string testfilePath {"test.txt"};
+    std::unique_ptr<bool, std::function<void(bool*)> > m_fileDeleter = {
+        reinterpret_cast<bool*>(1),
+        [&](bool*){
+            try {
+                std::filesystem::remove(testfilePath);
+            } catch (...) {
+                // ignore exceptions here
+            }
+        }
+    }; // Deletes file
+
+    {
+        std::ofstream tmpFile(testfilePath);
+        tmpFile << TEST_INI_DATA;
+        tmpFile.flush();
+    }
 
     IniFileParser parser;
-    ASSERT_TRUE(parser.read(tmpFile.getFilename(), true)) << parser.getLastErrorText();
+    ASSERT_TRUE(parser.read(testfilePath, true)) << parser.getLastErrorText();
     checkValues(parser);
 }
 
-TEST(ConfigParsing, IniWrite) {
-    // Prepare
-    TemporaryFile tmpFile("test.ini");
-    tmpFile << TEST_INI_DATA;
-    tmpFile.seekg(0);
+TEST(Components_Filework, IniWrite) {
+    const std::string testfilePath {"test.txt"};
+    std::unique_ptr<bool, std::function<void(bool*)> > m_fileDeleter = {
+        reinterpret_cast<bool*>(1),
+        [&](bool*){
+            try {
+                std::filesystem::remove(testfilePath);
+            } catch (...) {
+                // ignore exceptions here
+            }
+        }
+    }; // Deletes file
+
+    {
+        std::ofstream tmpFile(testfilePath);
+        tmpFile << TEST_INI_DATA;
+        tmpFile.flush();
+    }
 
     IniFileParser parser;
-    ASSERT_TRUE(parser.read(tmpFile.getFilename(), true)) << parser.getLastErrorText();
+    ASSERT_TRUE(parser.read(testfilePath, true)) << parser.getLastErrorText();
     checkValues(parser);
 
-    tmpFile.clearFileData();
     ASSERT_TRUE(parser.write("test_inifwrite.ini")) << parser.getLastErrorText();
 
     std::string tmpOutput;
