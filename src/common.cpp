@@ -2,7 +2,6 @@
 
 #include <Components/Logger/Logger.h>
 
-#include <algorithm>
 #include <cstring>
 #include <regex>
 
@@ -112,35 +111,36 @@ int16_t dirsCount(const std::string &dirPath)
 
 bool readFileData(const std::string &filePath, std::string &output)
 {
-    const uint16_t BUFFER_SIZE = 128;
     output.clear();
+    output.reserve(std::filesystem::file_size(filePath));
 
-    FILE *file;
-    char buffer[BUFFER_SIZE];
-    size_t bytesRead;
+    std::ifstream ifile;
+    ifile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
-    // Open the file in read mode
-    file = fopen(filePath.c_str(), "rb");
-    if (file == NULL) {
-        COMPLOG_ERROR("Failed to open file:", filePath);
+    ifile.open(filePath, std::ios_base::in | std::ios_base::binary);
+    if (!ifile.is_open()) {
         return false;
     }
 
-    while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
-        output.reserve(bytesRead);
-        std::copy_n(buffer, bytesRead, std::back_inserter(output));
-    }
+    const uint16_t BUFFER_SIZE = 1024;
+    char buffer[BUFFER_SIZE];
 
-    // Close the file
-    fclose(file);
+    size_t bytesRead = ifile.readsome(buffer, BUFFER_SIZE);
+    output.append(buffer, bytesRead);
+    while (bytesRead > 0) {
+        bytesRead = ifile.readsome(buffer, BUFFER_SIZE);
+        output.append(buffer, bytesRead);
+    }
     return true;
 }
 
 bool saveFileData(const std::string &filePath, const std::string &input)
 {
-    std::ofstream ofile(filePath);
+    std::ofstream ofile;
+    ofile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    ofile.open(filePath, std::ios_base::out | std::ios_base::binary);
     if (!ofile.is_open()) {
-        COMPLOG_ERROR("Failed to open file for output:", std::strerror(errno));
         return false;
     }
     ofile << input;
@@ -150,87 +150,26 @@ bool saveFileData(const std::string &filePath, const std::string &input)
 
 bool replaceFileData(const std::string &filePath, const std::string &dataString)
 {
-    /// C++ Code
-//    std::fstream cardFile(filePath, std::ios_base::trunc | std::ios_base::out);
-//    if (!cardFile.is_open())
-//    {
-//        COMPLOG_WARNING("Error writing to file by path:", filePath.c_str(), strerror(errno));
-//        return false;
-//    }
+   std::fstream cardFile(filePath, std::ios_base::trunc | std::ios_base::out);
+   if (!cardFile.is_open()) {
+       return false;
+   }
 
-//    cardFile << dataString;
-//    cardFile.close();
-//    return true;
-
-    /// C CODE (ADDED ONLY IN CASE OF MANY MEMORY ALLOCATIONS)
-    // Declare a FILE pointer
-    FILE *fp;
-
-    // Open using append flag
-    fp = fopen(filePath.c_str(), "w");
-
-    // Check if the file opened successfully
-    if (fp == NULL) {
-        COMPLOG_ERROR("Error opening file", filePath);
-        return false;
-    }
-
-    // You can use fputs or fwrite as well
-    fputs(dataString.c_str(), fp);
-
-    // Close the file
-    if (fclose(fp) != 0) {
-        COMPLOG_ERROR("Error closing file", filePath);
-        return false;
-    }
-    return true;
+   cardFile << dataString;
+   cardFile.close();
+   return true;
 }
 
 bool appendFileData(const std::string &filePath, const std::string &dataString)
 {
-    /// C++ CODE
-//    std::fstream cardFile(filePath, std::ios_base::app | std::ios_base::out);
-//    if (!cardFile.is_open())
-//    {
-//        COMPLOG_WARNING("Error writing to file by path:", filePath.c_str(), strerror(errno));
-//        return false;
-//    }
+   std::fstream cardFile(filePath, std::ios_base::app | std::ios_base::out);
+   if (!cardFile.is_open()) {
+       return false;
+   }
 
-//    cardFile << dataString;
-//    cardFile.close();
-//    return true;
-
-    /// C CODE (ADDED ONLY IN CASE OF MANY MEMORY ALLOCATIONS)
-    // Declare a FILE pointer
-    FILE *fp;
-
-    // Open using append flag
-    fp = fopen(filePath.c_str(), "a");
-
-    // Check if the file opened successfully
-    if (fp == NULL) {
-        COMPLOG_ERROR("Error opening file", filePath);
-        return false;
-    }
-
-    // You can use fputs or fwrite as well
-    fputs(dataString.c_str(), fp);
-
-    // Close the file
-    if (fclose(fp) != 0) {
-        COMPLOG_ERROR("Error closing file", filePath);
-        return false;
-    }
-    return true;
-}
-
-bool copyFile(const std::string &sourcePath, const std::string &targetPath, bool replaceExisting)
-{
-    try {
-        return stdfs::copy_file(sourcePath, targetPath, (replaceExisting ? stdfs::copy_options::overwrite_existing : stdfs::copy_options::skip_existing));
-    } catch (std::exception&) {
-        return false;
-    }
+   cardFile << dataString;
+   cardFile.close();
+   return true;
 }
 
 }

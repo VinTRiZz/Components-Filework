@@ -13,6 +13,9 @@ namespace Filework
 
 namespace Common
 {
+
+// TODO: Write tests for this functions
+
 std::vector<std::string> getContentPaths(const std::string& dirPath);
 std::vector<std::string> getContentNames(const std::string& dirPath, const std::string nameFilterRegexp = ".*");
 
@@ -23,12 +26,10 @@ int16_t objectCount(const std::string& dirPath);
 int16_t filesCount(const std::string& dirPath);
 int16_t dirsCount(const std::string& dirPath);
 
-bool readFileData(const std::string& filePath, std::string& output);
+bool readFileData(const std::string& filePath, std::string& output) noexcept(false);
 bool saveFileData(const std::string& filePath, const std::string& input);
 bool replaceFileData(const std::string& filePath, const std::string& dataString);
 bool appendFileData(const std::string& filePath, const std::string& dataString);
-
-bool copyFile(const std::string& sourcePath, const std::string& targetPath, bool replaceExisting = true);
 
 }
 
