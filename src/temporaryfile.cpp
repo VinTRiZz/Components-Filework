@@ -114,6 +114,16 @@ std::size_t TemporaryFile::size() const
     return std::filesystem::file_size(m_filepath);
 }
 
+TemporaryFile &TemporaryFile::write(const char *input, const std::streamsize byteCount) {
+    m_file.write(input, byteCount);
+    return *this;
+}
+
+std::streamsize TemporaryFile::readsome(char *output, const std::streamsize byteCount)
+{
+    return m_file.readsome(output, byteCount);
+}
+
 void TemporaryFile::clearFileData() noexcept(false)
 {
     m_file.close();

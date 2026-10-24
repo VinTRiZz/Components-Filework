@@ -103,6 +103,22 @@ public:
     }
 
     /**
+     * @brief write     Same as std::fstream write
+     * @param input     Input string
+     * @param byteCount Byte count to write
+     * @return
+     */
+    TemporaryFile& write(const char* input, const std::streamsize byteCount);
+
+    /**
+     * @brief readsome  Same as std::fstream readsome
+     * @param output    Output array
+     * @param byteCount Byte count to read
+     * @return
+     */
+    std::streamsize readsome(char* output, const std::streamsize byteCount);
+
+    /**
      * @brief clearFileData Wipes all data written to file (reopen it using TRUNCATE)
      */
     void clearFileData() noexcept(false);
