@@ -34,6 +34,15 @@ TEST(Components_Filework, TemporaryFileNoTarget) {
     }
 }
 
+TEST(Components_Filework, TemporaryFileRAII) {
+    std::string fileName;
+    {
+        Filework::TemporaryFile tmpFile;
+        fileName = tmpFile.getFilename();
+    }
+    ASSERT_FALSE(std::filesystem::exists(fileName)) << "RAII broken";
+}
+
 TEST(Components_Filework, TemporaryFileTarget) {
     const std::string TEST_TEXT {"Test_text"};
     const std::string TEST_TEXT_REPL {"Replaced_data"};
@@ -42,10 +51,8 @@ TEST(Components_Filework, TemporaryFileTarget) {
     std::unique_ptr<bool, std::function<void(bool*)> > m_fileDeleter = {
         reinterpret_cast<bool*>(1),
         [&](bool*){
-            try {
+            if (std::filesystem::exists(testfilePath)) {
                 std::filesystem::remove(testfilePath);
-            } catch (...) {
-                // ignore exceptions here
             }
         }
     }; // Deletes file
@@ -56,24 +63,13 @@ TEST(Components_Filework, TemporaryFileTarget) {
         testfile.flush();
     }
 
-    // Check if file even written
-    {
-        std::ifstream testfile(testfilePath);
-        std::string fileContents;
-        testfile >> fileContents;
-        if (fileContents != TEST_TEXT) {
-            std::filesystem::remove(testfilePath);
-        }
-        ASSERT_EQ(TEST_TEXT, fileContents) << "Failed to write data into test file";
-    }
-
     // Check temporary file writing
     Filework::TemporaryFile tmpFile(testfilePath);
     try {
         tmpFile.seekg(0, std::ios_base::end);
         tmpFile << TEST_TEXT_REPL;
+        tmpFile.flush();
     } catch (const std::exception& ex) {
-        std::filesystem::remove(testfilePath);
         std::cerr << "Failed to write data to temporary file" << std::endl;
         throw;
     }
@@ -85,7 +81,6 @@ TEST(Components_Filework, TemporaryFileTarget) {
         tmpFile >> fileContents;
         ASSERT_EQ(std::string(TEST_TEXT) + TEST_TEXT_REPL, fileContents);
     } catch (const std::exception& ex) {
-        std::filesystem::remove(testfilePath);
         std::cerr << "Failed to read data from temporary file" << std::endl;
         throw;
     }
@@ -94,7 +89,6 @@ TEST(Components_Filework, TemporaryFileTarget) {
     try {
         tmpFile.accept();
     } catch (const std::exception& ex) {
-        std::filesystem::remove(testfilePath);
         std::cerr << "Failed to accept temporary file" << std::endl;
         throw;
     }
@@ -107,7 +101,6 @@ TEST(Components_Filework, TemporaryFileTarget) {
         tmpFile >> fileContents;
         ASSERT_EQ(std::string(TEST_TEXT) + TEST_TEXT_REPL, fileContents);
     } catch (const std::exception& ex) {
-        std::filesystem::remove(testfilePath);
         std::cerr << "Failed to read data from temporary file" << std::endl;
         throw;
     }

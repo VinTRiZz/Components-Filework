@@ -111,6 +111,11 @@ public:
     TemporaryFile& write(const char* input, const std::streamsize byteCount);
 
     /**
+     * @brief flush     Same as std::fstream flush
+     */
+    void flush();
+
+    /**
      * @brief readsome  Same as std::fstream readsome
      * @param output    Output array
      * @param byteCount Byte count to read
