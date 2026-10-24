@@ -31,6 +31,7 @@ std::vector<std::string> getContentNames(const std::string &dirPath, const std::
             result.push_back(fileName);
         }
     }
+    std::sort(result.begin(), result.end());
     return result;
 }
 
@@ -43,6 +44,7 @@ std::vector<std::string> getContentPaths(const std::string &dirPath)
     auto dirIt = stdfs::directory_iterator(dirPath);
     for (const stdfs::directory_entry& entry : dirIt)
         result.push_back(entry.path());
+    std::sort(result.begin(), result.end());
     return result;
 }
 

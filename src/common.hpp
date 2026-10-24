@@ -14,8 +14,6 @@ namespace Filework
 namespace Common
 {
 
-// TODO: Write tests for this functions
-
 std::vector<std::string> getContentPaths(const std::string& dirPath);
 std::vector<std::string> getContentNames(const std::string& dirPath, const std::string nameFilterRegexp = ".*");
 
