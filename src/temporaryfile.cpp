@@ -67,11 +67,7 @@ bool TemporaryFile::setTargetFile(const std::string &targetFile)
     if (std::filesystem::exists(m_targetFilePath)) {
         std::filesystem::copy_file(m_targetFilePath, m_filepath, std::filesystem::copy_options::overwrite_existing);
     }
-    try {
-        m_file.open(m_filepath, std::ios_base::in | std::ios_base::out);
-    } catch (const std::ios_base::failure& e) {
-        throw std::runtime_error(std::string("Temporary file open error: ") + e.what());
-    }
+    init();
     return true;
 }
 
@@ -136,7 +132,7 @@ void TemporaryFile::clearFileData() noexcept(false)
 
 void TemporaryFile::init() noexcept(false)
 {
-    m_fileDeleter = {reinterpret_cast<bool*>(123),
+    m_fileDeleter = {reinterpret_cast<bool*>(1),
         [this](auto*) {
             if (std::filesystem::exists(m_filepath)) {
                 std::filesystem::remove(m_filepath);
