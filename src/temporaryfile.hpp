@@ -35,6 +35,13 @@ public:
     bool setTargetFile(const std::string& targetFile);
 
     /**
+     * @brief setZerofill   Enable zero-filling (replace all data with zeros before remove)
+     * @param isEnabled
+     * @note Mostly for security purposes
+     */
+    void setZerofill(bool isEnabled);
+
+    /**
      * @brief accept Write changes into a target file
      * @throws Same errors as std::filesystem::copy()
      */
@@ -131,6 +138,7 @@ public:
 private:
     std::string m_targetFilePath;
     std::string m_filepath;
+    bool        m_isZerofillEnabled {false}; // Security
     std::fstream m_file;
     std::unique_ptr<bool, std::function<void(bool*)> > m_fileDeleter; // Deletes file
 

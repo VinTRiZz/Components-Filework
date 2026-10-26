@@ -66,9 +66,22 @@ bool TemporaryFile::setTargetFile(const std::string &targetFile)
     return true;
 }
 
+void TemporaryFile::setZerofill(bool isEnabled)
+{
+    m_isZerofillEnabled = isEnabled;
+}
+
 void TemporaryFile::accept() noexcept(false) {
     if (m_targetFilePath.empty()) { return; }
     std::filesystem::copy_file(m_filepath, m_targetFilePath, std::filesystem::copy_options::overwrite_existing);
+    m_file.seekg(0, std::ios_base::beg);
+    const auto BUFF_SIZE {4096};
+    char buffer[BUFF_SIZE];
+    std::fill_n(buffer, BUFF_SIZE, '\0');
+    for (std::size_t fSize = 0; fSize < this->size(); fSize+=BUFF_SIZE) {
+        m_file.write(buffer, BUFF_SIZE);
+        m_file.flush();
+    }
 }
 
 std::string_view TemporaryFile::getFilename() const
@@ -137,6 +150,14 @@ void TemporaryFile::init() noexcept(false)
     m_fileDeleter = {reinterpret_cast<bool*>(1),
         [this](auto*) {
             if (std::filesystem::exists(m_filepath)) {
+                m_file.seekg(0, std::ios_base::beg);
+                const auto BUFF_SIZE {4096};
+                char buffer[BUFF_SIZE];
+                std::fill_n(buffer, BUFF_SIZE, '\0');
+                for (std::size_t fSize = 0; fSize < this->size(); fSize+=BUFF_SIZE) {
+                    m_file.write(buffer, BUFF_SIZE);
+                    m_file.flush();
+                }
                 std::filesystem::remove(m_filepath);
             }
         }
