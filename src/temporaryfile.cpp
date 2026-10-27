@@ -26,10 +26,10 @@ std::string TemporaryFile::createRandomString(unsigned int stringLength) {
     return result;
 }
 
-TemporaryFile::TemporaryFile(const std::string &targetFile) noexcept(false)
+TemporaryFile::TemporaryFile(const std::string &targetFile, bool copyContents) noexcept(false)
 {
     init();
-    setTargetFile(targetFile);
+    setTargetFile(targetFile, copyContents);
 }
 
 TemporaryFile::TemporaryFile() noexcept(false) {
@@ -40,7 +40,7 @@ TemporaryFile::~TemporaryFile() {
 
 }
 
-bool TemporaryFile::setTargetFile(const std::string &targetFile)
+bool TemporaryFile::setTargetFile(const std::string &targetFile, bool copyContents)
 {
     m_targetFilePath = targetFile;
     if (m_targetFilePath.empty()) {
@@ -64,7 +64,7 @@ bool TemporaryFile::setTargetFile(const std::string &targetFile)
             (isDirectory ? " directory" : " file")
             );
     }
-    if (!m_targetFilePath.empty() && std::filesystem::exists(m_targetFilePath)) {
+    if (copyContents && !m_targetFilePath.empty() && std::filesystem::exists(m_targetFilePath)) {
         std::filesystem::copy_file(m_targetFilePath, m_tmpFilePath, std::filesystem::copy_options::overwrite_existing);
     }
     return true;

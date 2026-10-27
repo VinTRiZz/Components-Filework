@@ -22,7 +22,7 @@ public:
 
     // Constructor-set of a target has no warranty,
     // that file will be set
-    TemporaryFile(const std::string& targetFile) noexcept(false);
+    TemporaryFile(const std::string& targetFile, bool copyContents = true) noexcept(false);
 
     TemporaryFile() noexcept(false);
     ~TemporaryFile();
@@ -32,7 +32,7 @@ public:
      * @param targetFile    Target file path
      * @return              true if target exist and writable or creatable
      */
-    bool setTargetFile(const std::string& targetFile);
+    bool setTargetFile(const std::string& targetFile, bool copyContents = true);
 
     /**
      * @brief setZerofill   Enable zero-filling (replace all data with zeros before remove)
