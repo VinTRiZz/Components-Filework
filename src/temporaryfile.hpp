@@ -93,7 +93,6 @@ public:
     template <typename InputT>
     TemporaryFile& operator <<(InputT&& val) {
         m_file << val;
-        m_file.flush();
         return *this;
     }
 
@@ -105,7 +104,6 @@ public:
     template <typename OutputT>
     TemporaryFile& operator >>(OutputT& val) {
         m_file >> val;
-        m_file.flush();
         return *this;
     }
 
@@ -136,13 +134,18 @@ public:
     void clearFileData() noexcept(false);
 
 private:
-    std::string m_targetFilePath;
-    std::string m_filepath;
-    bool        m_isZerofillEnabled {false}; // Security
-    std::fstream m_file;
+    std::string     m_targetFilePath    {};
+    std::string     m_tmpFilePath       {createRandomString(16)};
+    bool            m_isZerofillEnabled {false}; // Security
+    std::fstream    m_file;
     std::unique_ptr<bool, std::function<void(bool*)> > m_fileDeleter; // Deletes file
 
+    // Utility
+    static std::string createRandomString(unsigned int stringLength);
+
     void init() noexcept(false);
+    void wipeData();
+    void openTmpFile() noexcept(false);
 };
 
 }

@@ -2,13 +2,14 @@
 
 #include <filesystem>
 #include <random>
+#include <algorithm>
 
 namespace Filework
 {
 
 static const auto OPENFLAGS {std::ios_base::trunc | std::ios_base::in | std::ios_base::out | std::ios_base::binary};
 
-std::string createRandomString(unsigned int stringLength) {
+std::string TemporaryFile::createRandomString(unsigned int stringLength) {
     std::random_device rd;
     std::mt19937 gen(rd());
 
@@ -18,14 +19,16 @@ std::string createRandomString(unsigned int stringLength) {
 
     std::string result;
     result.reserve(stringLength);
-    for (unsigned int i = 0; i < stringLength; ++i)
-        result += characters[dis(gen)];
+    std::generate_n(std::back_inserter(result), stringLength, [&](){
+        return characters[dis(gen)];
+    });
 
     return result;
 }
 
 TemporaryFile::TemporaryFile(const std::string &targetFile) noexcept(false)
 {
+    init();
     setTargetFile(targetFile);
 }
 
@@ -34,8 +37,7 @@ TemporaryFile::TemporaryFile() noexcept(false) {
 }
 
 TemporaryFile::~TemporaryFile() {
-    m_file.close();
-    std::filesystem::remove(m_filepath);
+
 }
 
 bool TemporaryFile::setTargetFile(const std::string &targetFile)
@@ -43,7 +45,7 @@ bool TemporaryFile::setTargetFile(const std::string &targetFile)
     m_targetFilePath = targetFile;
     if (m_targetFilePath.empty()) {
         // Reset file path is allowed
-        clearFileData();
+        wipeData();
         return true;
     }
     auto tgtFilePath = std::filesystem::path(m_targetFilePath);
@@ -57,12 +59,14 @@ bool TemporaryFile::setTargetFile(const std::string &targetFile)
     if (isDirectory || (!isNewFile && !isEditable)) {
         throw std::runtime_error(
             std::string("Invalid target file:") +
-                (isNewFile ? " new" : " existing") +
-                (isEditable ? " ReadWrite" : " not ReadWrite") +
-                (isDirectory ? " directory" : " file")
+            (isNewFile ? " new" : " existing") +
+            (isEditable ? " ReadWrite" : " not ReadWrite") +
+            (isDirectory ? " directory" : " file")
             );
     }
-    init();
+    if (!m_targetFilePath.empty() && std::filesystem::exists(m_targetFilePath)) {
+        std::filesystem::copy_file(m_targetFilePath, m_tmpFilePath, std::filesystem::copy_options::overwrite_existing);
+    }
     return true;
 }
 
@@ -73,20 +77,13 @@ void TemporaryFile::setZerofill(bool isEnabled)
 
 void TemporaryFile::accept() noexcept(false) {
     if (m_targetFilePath.empty()) { return; }
-    std::filesystem::copy_file(m_filepath, m_targetFilePath, std::filesystem::copy_options::overwrite_existing);
-    m_file.seekg(0, std::ios_base::beg);
-    const auto BUFF_SIZE {4096};
-    char buffer[BUFF_SIZE];
-    std::fill_n(buffer, BUFF_SIZE, '\0');
-    for (std::size_t fSize = 0; fSize < this->size(); fSize+=BUFF_SIZE) {
-        m_file.write(buffer, BUFF_SIZE);
-        m_file.flush();
-    }
+    m_file.flush();
+    std::filesystem::copy_file(m_tmpFilePath, m_targetFilePath, std::filesystem::copy_options::overwrite_existing);
 }
 
 std::string_view TemporaryFile::getFilename() const
 {
-    return m_filepath;
+    return m_tmpFilePath;
 }
 
 std::string_view TemporaryFile::getTargetFilename() const
@@ -115,7 +112,7 @@ bool TemporaryFile::empty() const
 
 std::size_t TemporaryFile::size() const
 {
-    return std::filesystem::file_size(m_filepath);
+    return std::filesystem::file_size(m_tmpFilePath);
 }
 
 TemporaryFile &TemporaryFile::write(const char *input, const std::streamsize byteCount) {
@@ -135,49 +132,66 @@ std::streamsize TemporaryFile::readsome(char *output, const std::streamsize byte
 
 void TemporaryFile::clearFileData() noexcept(false)
 {
-    m_file.close();
-    try {
-        m_file.open(m_filepath, OPENFLAGS);
-    } catch (const std::ios_base::failure& e) {
-        throw std::runtime_error(std::string("Temporary file open error: ") + e.what());
-    }
+    wipeData();
+    openTmpFile();
 }
 
 void TemporaryFile::init() noexcept(false)
 {
-    if (m_file.is_open()) { m_file.close(); }
-
     m_fileDeleter = {reinterpret_cast<bool*>(1),
         [this](auto*) {
-            if (std::filesystem::exists(m_filepath)) {
-                m_file.seekg(0, std::ios_base::beg);
-                const auto BUFF_SIZE {4096};
-                char buffer[BUFF_SIZE];
-                std::fill_n(buffer, BUFF_SIZE, '\0');
-                for (std::size_t fSize = 0; fSize < this->size(); fSize+=BUFF_SIZE) {
-                    m_file.write(buffer, BUFF_SIZE);
-                    m_file.flush();
-                }
-                std::filesystem::remove(m_filepath);
+            wipeData();
+            if (m_file.is_open()) {
+                m_file.close();
+            }
+            if (std::filesystem::exists(m_tmpFilePath)) {
+                std::filesystem::remove(m_tmpFilePath);
             }
         }
     };
+    wipeData();
+    openTmpFile();
+}
 
-    m_filepath = createRandomString(10);
+void TemporaryFile::wipeData()
+{
+    if (!std::filesystem::exists(m_tmpFilePath)) {
+        return;
+    }
+
+    if (!m_isZerofillEnabled) {
+        if (m_file.is_open()) {
+            m_file.close();
+        }
+        std::filesystem::resize_file(m_tmpFilePath, 0);
+        return;
+    }
+
+    openTmpFile();
+    const auto BUFF_SIZE {4096};
+    char buffer[BUFF_SIZE];
+    std::fill_n(buffer, BUFF_SIZE, '\0');
+    for (std::size_t fSize = 0; fSize < this->size(); fSize+=BUFF_SIZE) {
+        m_file.write(buffer, BUFF_SIZE);
+        m_file.flush();
+    }
+    m_file.close();
+
+    std::filesystem::resize_file(m_tmpFilePath, 0);
+}
+
+void TemporaryFile::openTmpFile() noexcept(false)
+{
+    if (m_file.is_open()) { return; }
     m_file.exceptions(std::ios::failbit);
-
     try {
-        if (std::filesystem::exists(m_filepath)) {
-            m_file.open(m_filepath, OPENFLAGS & ~std::ios_base::trunc);
+        if (std::filesystem::exists(m_tmpFilePath)) {
+            m_file.open(m_tmpFilePath, OPENFLAGS & ~std::ios_base::trunc);
         } else {
-            m_file.open(m_filepath, OPENFLAGS);
+            m_file.open(m_tmpFilePath, OPENFLAGS);
         }
     } catch (const std::ios_base::failure& e) {
         throw std::runtime_error(std::string("Temporary file open error: ") + e.what());
-    }
-
-    if (!m_targetFilePath.empty() && std::filesystem::exists(m_targetFilePath)) {
-        std::filesystem::copy_file(m_targetFilePath, m_filepath, std::filesystem::copy_options::overwrite_existing);
     }
 }
 
